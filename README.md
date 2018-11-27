@@ -2,6 +2,8 @@
 
 ## You should have a Docker Swarm setup already.
 
+Place folders `redis/` and `redis-slave/` in the root directory for all of your *Workers* and *Managers* that will be running an instance of this app. 
+
 run `docker stack deploy -c redis-compose-stack.yml <name>`
 
 That's it!

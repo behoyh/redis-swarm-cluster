@@ -1,14 +1,80 @@
-version: "3.4"
+version: '3'
+
 services:
-  redis:
-    image: redis
-    command: ["redis-server","--cluster-enabled yes","--cluster-node-timeout 60000","--cluster-require-full-coverage no"]
+  redis-master:
+    image: 'bitnami/redis:5.0.2'
     ports:
-      - 6379:6379
+      - '6379:6379'
+    environment:
+      - REDIS_REPLICATION_MODE=master 
+      - REDIS_PASSWORD=f7paul12-d571-4701-9c55-64vanacecDyK
     deploy:
+      mode: global
+      restart_policy:
+        condition: on-failure
+    volumes: 
+      - 'redis:/opt/bitnami/redis/etc/'
+
+
+  redis-slave:
+    image: 'bitnami/redis:5.0.2'
+    ports:
+      - '6379'
+    depends_on:
+      - redis-master
+    environment:
+      - REDIS_REPLICATION_MODE=slave
+      - REDIS_MASTER_HOST=redis-master
+      - REDIS_MASTER_PORT_NUMBER=6379
+      - REDIS_MASTER_PASSWORD=f7paul12-d571-4701-9c55-64vanacecDyK
+      - REDIS_PASSWORD=f7paul12-d571-4701-9c55-64vanacecDyK
+    deploy:
+      mode: replicated
       replicas: 6
       update_config:
         parallelism: 1
         delay: 20s
       restart_policy:
         condition: on-failure
+    volumes: 
+      - 'redis:/opt/bitnami/redis/etc/'
+
+  redis-sentinel:
+    image: 'bitnami/redis:5.0.2'
+    ports:
+      - '16379'
+    depends_on:
+      - redis-master
+      - redis-slave
+    entrypoint: |
+      bash -c 'bash -s <<EOF
+      "/bin/bash" -c "cat <<EOF > /opt/bitnami/redis/etc/sentinel.conf
+      port 16379
+      dir /tmp
+      sentinel monitor master-node redis-master 6379 2
+      sentinel down-after-milliseconds master-node 5000
+      sentinel parallel-syncs master-node 1
+      sentinel failover-timeout master-node 5000
+      sentinel auth-pass master-node f7paul12-d571-4701-9c55-64vanacecDyK
+      sentinel announce-ip redis-sentinel
+      sentinel announce-port 16379
+      EOF"     
+      "/bin/bash" -c "redis-sentinel /opt/bitnami/redis/etc/sentinel.conf"    
+      EOF'
+    deploy:
+      mode: global
+      restart_policy:
+        condition: on-failure
+volumes:
+  redis:
+    driver: local
+    driver_opts:
+      type: 'none'
+      o: 'bind'
+      device: '/redis'
+  redis-slave:
+    driver: local
+    driver_opts:
+      type: 'none'
+      o: 'bind'
+      device: '/redis-slave'

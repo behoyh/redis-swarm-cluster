@@ -2,7 +2,7 @@ version: '3.4'
 
 services:
   redis-master:
-    image: 'bitnami/redis:5.0.6'
+    image: 'bitnami/redis:5.0.2'
     ports:
       - '6379:6379'
     environment:
@@ -16,13 +16,13 @@ services:
       - 'redis:/opt/bitnami/redis/etc/'
 
   redis-replica:
-    image: 'bitnami/redis:5.0.6'
+    image: 'bitnami/redis:5.0.2'
     ports:
       - '6379'
     depends_on:
       - redis-master
     environment:
-      - REDIS_REPLICATION_MODE=replica
+      - REDIS_REPLICATION_MODE=slave
       - REDIS_MASTER_HOST=redis-master
       - REDIS_MASTER_PORT_NUMBER=6379
       - REDIS_MASTER_PASSWORD=f7paul12-d571-4701-9c55-64vanacecDyK
@@ -37,7 +37,7 @@ services:
         condition: any
 
   redis-sentinel:
-    image: 'bitnami/redis:5.0.6'
+    image: 'bitnami/redis:5.0.2'
     ports:
       - '16379'
     depends_on:
@@ -62,10 +62,11 @@ services:
       mode: global
       restart_policy:
         condition: any
+        
 volumes:
   redis:
     driver: local
     driver_opts:
       type: 'none'
       o: 'bind'
-      device: '/redis/'
+      device: '/c/redis/'

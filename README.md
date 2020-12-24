@@ -1,6 +1,6 @@
-# redis-swarm-cluster
+# Redis Swarm Cluster
 
-## You should have a Docker Swarm setup already.
+**⚠️ You should have a Docker Swarm setup already. ⚠️**
 
 Place folder `redis/` in the root directory for all of your nodes that will be running an instance of this container. 
 
